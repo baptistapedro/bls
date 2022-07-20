@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-
+#include <string>
+#include <stddef.h>
+#include <stdint.h>
+/*
 void simpleSample()
 {
 	blsSecretKey sec;
@@ -15,9 +18,9 @@ void simpleSample()
 	blsSign(&sig, &sec, msg, msgSize);
 	printf("verify correct message %d\n", blsVerify(&sig, &pub, msg, msgSize));
 	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
-}
+}*/
 
-void k_of_nSample()
+void k_of_nSample(const char *msg)
 {
 #define N 5 // you can increase
 #define K 3 // fixed
@@ -27,7 +30,7 @@ void k_of_nSample()
 	blsPublicKey pubs[N];
 	blsSignature sigs[N];
 
-	const char *msg = "abc";
+	//const char *msg = "abc";
 	const size_t msgSize = strlen(msg);
 
 	// All ids must be non-zero and different from each other.
@@ -117,13 +120,15 @@ void k_of_nSample()
 #undef N
 }
 
-int main()
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 #ifdef BLS_ETH
 	puts("BLS_ETH mode");
 #else
 	puts("no BLS_ETH mode");
 #endif
+	std::string buf(reinterpret_cast<const char*>(data), size);
+	buf.push_back('\0');
 	int r = blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR);
 	if (r != 0) {
 		printf("err blsInit %d\n", r);
@@ -136,7 +141,7 @@ int main()
 		return 1;
 	}
 #endif
-	simpleSample();
-	k_of_nSample();
+	//simpleSample();
+	k_of_nSample(buf.c_str());
 	return 0;
 }
